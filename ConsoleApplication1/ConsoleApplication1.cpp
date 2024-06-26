@@ -1,6 +1,31 @@
 #include <iostream>
 #include <Windows.h>
 #include <stdexcept>
+#include <fstream>
+#include <string>
+
+
+class Text {
+public:
+    Text(const std::string& filePath);
+    const std::string& getText() const;
+
+private:
+    std::string text;
+};
+
+Text::Text(const std::string& filePath) {
+    std::ifstream file(filePath);
+    if (!file.is_open()) {
+        throw std::runtime_error("Could not open the file");
+    }
+
+    std::string line;
+    while (std::getline(file, line)) {
+        text += line + "\n";
+    }
+    file.close();
+}
 
 class CaesarCipher {
 public:
