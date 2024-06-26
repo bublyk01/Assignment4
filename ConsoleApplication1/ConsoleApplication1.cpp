@@ -98,11 +98,11 @@ void CommandLineInterface::run() {
     std::cin >> operation;
 
     std::string inputPath;
-    std::cout << "Enter the path to the file you want to encrypt: ";
+    std::cout << "Enter the path to the file you want to process: ";
     std::cin >> inputPath;
 
     std::string outputPath;
-    std::cout << "Enter the path to save the file: ";
+    std::cout << "Enter the path to save the processed file: ";
     std::cin >> outputPath;
 
     int key;
@@ -117,7 +117,7 @@ void CommandLineInterface::run() {
             decryptFile(inputPath, outputPath, key);
         }
         else {
-            std::cerr << "Wrong operation" << std::endl;
+            std::cerr << "Invalid operation" << std::endl;
         }
     }
     catch (const std::exception& e) {
@@ -141,7 +141,7 @@ void CommandLineInterface::encryptFile(const std::string& inputPath, const std::
         outFile.close();
     }
     else {
-        std::cerr << "Could not open the file" << std::endl;
+        std::cerr << "Could not open the output file" << std::endl;
     }
 
     delete[] encryptedText;
@@ -163,7 +163,7 @@ void CommandLineInterface::decryptFile(const std::string& inputPath, const std::
         outFile.close();
     }
     else {
-        std::cerr << "Failed to open output file" << std::endl;
+        std::cerr << "Could not open the output file" << std::endl;
     }
 
     delete[] decryptedText;
