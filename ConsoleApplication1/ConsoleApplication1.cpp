@@ -5,32 +5,6 @@
 #include <stdexcept>
 #include <vector>
 
-class Text {
-public:
-    Text(const std::string& filePath);
-    const std::string& getText() const;
-
-private:
-    std::string text;
-};
-
-Text::Text(const std::string& filePath) {
-    std::ifstream file(filePath);
-    if (!file.is_open()) {
-        throw std::runtime_error("Could not open the file");
-    }
-
-    std::string line;
-    while (std::getline(file, line)) {
-        text += line + "\n";
-    }
-    file.close();
-}
-
-const std::string& Text::getText() const {
-    return text;
-}
-
 class CaesarCipher {
 public:
     CaesarCipher(const char* dllPath);
@@ -126,47 +100,69 @@ void CommandLineInterface::run() {
 }
 
 void CommandLineInterface::encryptFile(const std::string& inputPath, const std::string& outputPath, int key) {
-    Text text(inputPath);
-    std::string rawText = text.getText();
+    std::ifstream inFile(inputPath, std::ios::binary);
+    if (!inFile.is_open()) {
+        throw std::runtime_error("Could not open the input file");
+    }
 
-    std::vector<char> rawTextCStr(rawText.size() + 1);
-    strcpy_s(rawTextCStr.data(), rawTextCStr.size(), rawText.c_str());
+    std::ofstream outFile(outputPath, std::ios::binary);
+    if (!outFile.is_open()) {
+        throw std::runtime_error("Could not open the output file");
+    }
 
+    const size_t chunkSize = 16;
+    char buffer[chunkSize];
     CaesarCipher cipher("DLL1.dll");
-    char* encryptedText = cipher.encrypt(rawTextCStr.data(), key);
 
-    std::ofstream outFile(outputPath);
-    if (outFile.is_open()) {
-        outFile << encryptedText;
-        outFile.close();
-    }
-    else {
-        std::cerr << "Could not open the output file" << std::endl;
+    while (inFile.read(buffer, chunkSize) || inFile.gcount() > 0) {
+        std::vector<char> chunkBuffer(buffer, buffer + inFile.gcount());
+        chunkBuffer.push_back('\0');
+
+        char* encryptedChunk = cipher.encrypt(chunkBuffer.data(), key);
+        if (encryptedChunk) {
+            outFile.write(encryptedChunk, strlen(encryptedChunk));
+            delete[] encryptedChunk;
+        }
+        else {
+            throw std::runtime_error("Could not encrypt the file");
+        }
     }
 
-    delete[] encryptedText;
+    inFile.close();
+    outFile.close();
 }
 
 void CommandLineInterface::decryptFile(const std::string& inputPath, const std::string& outputPath, int key) {
-    Text text(inputPath);
-    std::string encryptedText = text.getText();
+    std::ifstream inFile(inputPath, std::ios::binary);
+    if (!inFile.is_open()) {
+        throw std::runtime_error("Could not open the input file");
+    }
 
-    std::vector<char> encryptedTextCStr(encryptedText.size() + 1);
-    strcpy_s(encryptedTextCStr.data(), encryptedTextCStr.size(), encryptedText.c_str());
+    std::ofstream outFile(outputPath, std::ios::binary);
+    if (!outFile.is_open()) {
+        throw std::runtime_error("Could not open the output file");
+    }
 
+    const size_t chunkSize = 16;
+    char buffer[chunkSize];
     CaesarCipher cipher("DLL1.dll");
-    char* decryptedText = cipher.decrypt(encryptedTextCStr.data(), key);
 
-    std::ofstream outFile(outputPath);
-    if (outFile.is_open()) {
-        outFile << decryptedText;
-        outFile.close();
-    }
-    else {
-        std::cerr << "Could not open the output file" << std::endl;
+    while (inFile.read(buffer, chunkSize) || inFile.gcount() > 0) {
+        std::vector<char> chunkBuffer(buffer, buffer + inFile.gcount());
+        chunkBuffer.push_back('\0');
+
+        char* decryptedChunk = cipher.decrypt(chunkBuffer.data(), key);
+        if (decryptedChunk) {
+            outFile.write(decryptedChunk, strlen(decryptedChunk));
+            delete[] decryptedChunk;
+        }
+        else {
+            throw std::runtime_error("Could not decrypt the file");
+        }
     }
 
-    delete[] decryptedText;
+    inFile.close();
+    outFile.close();
 }
 
 int main() {
